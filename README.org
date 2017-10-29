@@ -1,0 +1,69 @@
+* Overall
+This project is about simulate shop service. This simulate is drive by event not by time. Each server have a priority, the smaller number mean more faster, using less time service same customer. At the end, I have output the number of customers served, time last customer completed service(the total time for this simulate), the greatest length reached by the queue, average length of the queue and average customer waiting time and server info, include server priority, number of customers served and server idle time.
+
+I am using priority event queue structure to find which event is the next event represented by heap. The top element is the next event.
+
+I am using a server pool for recorded each server status, include priority, customers Served, busy Time and Idle status
+
+And I also have a first in first out queue for when all of server are busy, customers are writing in this queue.
+
+I have using quick sort for sort server pool by priority, from slowest server to the faster server. The purpose is I can fast to find which server is the fast one in all of idle servers.
+
+* list of all of data structure used
+
+** server pool
+I am using server pool for recorded each server status. This server pool is a dynamic memory array.
+Why using dynamic memory array rather than fixed size array?
+The reason is we can get the number of server at the beginning. I only allocate before when I read server priority and I need not change size after. So, dynamic memory are better choice, we can save memory and also faster to find element value.
+Each element include server priority, number of customers served and server busy time and Idle status.
+Server busy time is for more easier calculate server idle time. I only need using total time in this simulate subtract the sum of busy time.
+The priority and idle status for find the fastest idle server. When change the info in the server pool, all of  operation complexity is O(1).
+
+** Event priority queue represented by heap
+This heap is also represent by dynamic memory array. The array size is number of server plus one because in this array the maximum space usage for story all of server is busy(have total number of server is customer finish event) plus a customer arriving event.
+Each element in the heap include event type. if eventType == -1 mean this is a customer arriving event. others number mean this is customer finish service event and this number is which server service this customer.
+Each element also story event time. For customer arrive event this time is arrive time. For customer finish event this time is server finish time.
+Also recorded service Time for calculate server finish time when customers arrive event change to customers finish event.
+The top element in the heap will be the next event and the service time is the smallest one.
+
+When I delete the top element, the operation complexity is O(log n), I put the last element at the top and sift down.
+When I insert a new event to heap, the operation complexity is O(log n), I insert at the end and sift up.
+
+From Wiki, the priority queue is an abstract data type, which can be implement by array, Fibonacci heap, and Pairing Heap. Using Fibonacci heap or pairing heap in some case maybe better, but I think in this assignment. I am using heap is good choice because we have not lagare size of heap.
+
+** First in first out queue
+This queue I represent by a big fixed size array. I also have two index, one point to the begin and one point to end. So, when have new customer into the queue, I only need add into end index position and move end index to the next one. When pop queue is similar, the begin index is that customer, and change begin index to the next one. When begin and end index reach the end of array, next one will be the first element of array.
+So, When I pop queue or insert a customer into queue, the operation complexity is O(1).
+
+* all of standard algorithms
+** quick sort
+Quicksort worst case complexity is O(n^2)
+best case complexity is O(n log n)
+average case complexity is O(n log n)
+quick sort complexity come from WiKi.
+When I init the server pool, I have using quicksort, sort server pool by priority from slowest to fastest. All of this prepare find the fastest idle server.
+
+** find the fastest idle server
+My method for find the fastest idle server is like linear search because my server pool already sorted. So, when I find the fastest idle server, I search from the fastest server to slowest server. Find which one idle server. If all of server are busy, I will return -1 mean, all server are busy.
+So, when I find the fastest idle server the worst case complexity is O(number of server). The best case is O(1).
+
+*** my method VS linear search
+linear search using constant time, search all of server. My method worst case is same with linear search, but average is better than linear search.
+
+*** my memory VS using heap
+It is possible using heap to find the fastest idle server. It is need allocate memory for story idle server index, each idle server index will point to server pool. The top element in the heap will be the fastest idle server.
+I think this method is suitable for big amount number of server. However, in our case, the maximum number of server is 20. For maintain the heap also cast time, this time is not much different than using my method. But my method need not allocate another memory for find the fastest idle server.
+So, in our case, I think my method is better than using heap.
+
+** Event driven simulation
+I have used event driven simulation for this shop service simulation rather than using time driven simulation.
+The reason is Time Driven Simulation stop and observer the system after fixed interval, the events are assumed to happen at the end of each interval. This info come from WiKi.If each interval is one second, This mean the simulation usually will have more event than event driven simulation.
+When we using event driven simulation will from one event jump to next event. So, less event will cost less time.
+As a result, using event driven simulation is better than time driven simulation.
+
+** calculate average customer waiting time
+When the first in first out queue pop, after I will calculate this customer waiting time. In this queue, there are recorded customer arrive time and I know current time. So, current time - customer arrive time, I can get this customer waiting time.
+I am story all of those customer waiting time in a array. After I add all of waiting time together(sum) and divide by total number of customer. If customer direct serviced not into the queue, the waiting time is 0.
+
+** average length of the queue
+ Each time when queue length change(queue pop and queue insert). I will record queue length into a array. At the end, I am calculate sum of all element in this array and divide by total event(number of customer * 2 arrive event and finish event)
